@@ -2,12 +2,13 @@ services:
   - type: web
     name: environmental-data-app
     env: python
-    plan: free
-    buildCommand: ""
-    startCommand: python app.py
-    envVars:
-      - key: EXCEL_FILE
-        value: /data/environmental_data.xlsx
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    # envVars:
+    #   - key: EXCEL_FILE
+    #     value: /data/environmental_data.xlsx
     disk:
       name: data-disk
       mountPath: /data
+      sizeGb: 1
