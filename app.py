@@ -7,6 +7,8 @@ from datetime import datetime
 from io import BytesIO
 import shutil
 
+EXCEL_FILE = os.getenv("EXCEL_FILE", "environmental_data.xlsx")
+
 app = Flask(__name__)
 EXCEL_FILE = "environmental_data.xlsx"
 BACKUP_FOLDER = "backups"

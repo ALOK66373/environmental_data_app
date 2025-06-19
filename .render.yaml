@@ -2,9 +2,12 @@ services:
   - type: web
     name: environmental-data-app
     env: python
+    plan: free
     buildCommand: ""
     startCommand: python app.py
-    plan: free
     envVars:
-      - key: FLASK_ENV
-        value: production
+      - key: EXCEL_FILE
+        value: /data/environmental_data.xlsx
+    disk:
+      name: data-disk
+      mountPath: /data
