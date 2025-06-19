@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Environment Test Data Entry</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <div class="container mt-4">
+    <h2 class="mb-4">Environment Test Data Entry</h2>
+
+    <ul class="nav nav-tabs" id="tabMenu" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" id="water-tab" data-bs-toggle="tab" data-bs-target="#water" type="button">Water Test</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" id="soil-tab" data-bs-toggle="tab" data-bs-target="#soil" type="button">Soil Test</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" id="air-tab" data-bs-toggle="tab" data-bs-target="#air" type="button">Air Test</button>
+      </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+      <!-- Water Test Form -->
+      <div class="tab-pane fade show active" id="water">
+        <form method="POST" action="/submit">
+          <input type="hidden" name="sheet" value="Water Test" />
+          <div class="mb-2"><label>Date</label><input type="date" name="Date" class="form-control" required /></div>
+          {% for field in ["Fertile", "PH", "H2 - Ppb", "ORP -Mv", "Res", "us/cm", "TDS -ppm", "Salt %", "Salt sg"] %}
+            <div class="mb-2">
+              <label>{{ field }}</label>
+              <input type="number" step="any" name="{{ field }}" placeholder="{{ field }}" class="form-control" />
+            </div>
+          {% endfor %}
+          <button class="btn btn-primary">Submit</button>
+        </form>
+        <div class="mt-3">
+          <a href="/view/Water Test" class="btn btn-info btn-sm">View/Edit Water Data</a>
+          <a href="/download/Water Test" class="btn btn-secondary btn-sm">Download Water Sheet</a>
+        </div>
+      </div>
+
+      <!-- Soil Test Form -->
+      <div class="tab-pane fade" id="soil">
+        <form method="POST" action="/submit">
+          <input type="hidden" name="sheet" value="Soil Test" />
+          <div class="mb-2"><label>Date</label><input type="date" name="Date" class="form-control" required /></div>
+          {% for field in ["Moisture", "Light", "Ph"] %}
+            <div class="mb-2">
+              <label>{{ field }}</label>
+              <input type="number" step="any" name="{{ field }}" placeholder="{{ field }}" class="form-control" />
+            </div>
+          {% endfor %}
+          <button class="btn btn-primary">Submit</button>
+        </form>
+        <div class="mt-3">
+          <a href="/view/Soil Test" class="btn btn-info btn-sm">View/Edit Soil Data</a>
+          <a href="/download/Soil Test" class="btn btn-secondary btn-sm">Download Soil Sheet</a>
+        </div>
+      </div>
+
+      <!-- Air Test Form -->
+      <div class="tab-pane fade" id="air">
+        <form method="POST" action="/submit">
+          <input type="hidden" name="sheet" value="Air Test" />
+          <div class="mb-2"><label>Date</label><input type="date" name="Date" class="form-control" required /></div>
+          {% for field in ["Temperature", "Humidity", "Air pollution level", "PM2.5 (AQI)", "HCHO", "TVOC"] %}
+            <div class="mb-2">
+              <label>{{ field }}</label>
+              <input type="number" step="any" name="{{ field }}" placeholder="{{ field }}" class="form-control" />
+            </div>
+          {% endfor %}
+          <button class="btn btn-primary">Submit</button>
+        </form>
+        <div class="mt-3">
+          <a href="/view/Air Test" class="btn btn-info btn-sm">View/Edit Air Data</a>
+          <a href="/download/Air Test" class="btn btn-secondary btn-sm">Download Air Sheet</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <a href="/plot" class="btn btn-success">📊 View Plots</a>
+      <a href="/download-all" class="btn btn-success mb-4">Download Full Excel Workbook</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

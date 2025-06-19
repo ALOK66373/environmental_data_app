@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ sheet_name }} View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    td input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    td input:focus {
+      outline: 1px solid #0d6efd;
+      background: white;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container mt-4">
+    <h3 class="mb-3">{{ sheet_name }} Data</h3>
+
+    <div class="mb-3">
+      <button id="edit-btn" class="btn btn-primary">Edit</button>
+      <button id="save-btn" class="btn btn-success d-none">Save Changes</button>
+      <button id="cancel-btn" class="btn btn-secondary d-none">Cancel</button>
+    </div>
+
+    <div class="table-responsive">
+      <table id="data-table" class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            {% for col in columns %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for col in columns %}
+                <td data-column="{{ col }}">{{ row[col] }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <a href="/" class="btn btn-secondary mt-3">← Back to Entry</a>
+  </div>
+
+  <script>
+    const editBtn = document.getElementById('edit-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const table = document.getElementById('data-table');
+    let originalData = [];
+
+    // Save original data for cancel
+    function storeOriginalData() {
+      originalData = [];
+      [...table.tBodies[0].rows].forEach(row => {
+        const rowData = {};
+        [...row.cells].forEach(cell => {
+          rowData[cell.dataset.column] = cell.textContent.trim();
+        });
+        originalData.push(rowData);
+      });
+    }
+
+    // Restore data on cancel
+    function restoreOriginalData() {
+      [...table.tBodies[0].rows].forEach((row, i) => {
+        [...row.cells].forEach(cell => {
+          cell.textContent = originalData[i][cell.dataset.column];
+        });
+      });
+    }
+
+    function enableEditing(enable) {
+      [...table.tBodies[0].rows].forEach(row => {
+        [...row.cells].forEach(cell => {
+          if (enable) {
+            const value = cell.textContent.trim();
+            const col = cell.dataset.column;
+            cell.innerHTML = <input type="${col.toLowerCase() === 'date' ? 'date' : 'text'}" value="${value}" />;
+          } else {
+            const input = cell.querySelector('input');
+            if (input) {
+              cell.textContent = input.value;
+            }
+          }
+        });
+      });
+    }
+
+    editBtn.addEventListener('click', () => {
+      storeOriginalData();
+      enableEditing(true);
+      editBtn.classList.add('d-none');
+      saveBtn.classList.remove('d-none');
+      cancelBtn.classList.remove('d-none');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      restoreOriginalData();
+      enableEditing(false);
+      editBtn.classList.remove('d-none');
+      saveBtn.classList.add('d-none');
+      cancelBtn.classList.add('d-none');
+    });
+
+    saveBtn.addEventListener('click', () => {
+      // Collect edited data
+      const columns = [];
+      [...table.tHead.rows[0].cells].forEach(cell => columns.push(cell.textContent.trim()));
+
+      const rowsData = [];
+      [...table.tBodies[0].rows].forEach(row => {
+        const rowData = {};
+        [...row.cells].forEach(cell => {
+          const input = cell.querySelector('input');
+          rowData[cell.dataset.column] = input ? input.value : cell.textContent.trim();
+        });
+        rowsData.push(rowData);
+      });
+
+      // Send data to /edit via fetch POST
+      fetch('/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheet: "{{ sheet_name }}",
+          columns: columns,
+          data: rowsData
+        })
+      }).then(resp => resp.json())
+        .then(res => {
+          if(res.success) {
+            alert('Data saved successfully!');
+            enableEditing(false);
+            editBtn.classList.remove('d-none');
+            saveBtn.classList.add('d-none');
+            cancelBtn.classList.add('d-none');
+          } else {
+            alert('Error saving data: ' + (res.error || 'Unknown error'));
+          }
+        }).catch(err => {
+          alert('Request failed: ' + err);
+        });
+    });
+  </script>
+</body>
+</html>

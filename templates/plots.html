@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Environment Plots</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    #loading-spinner {
+      display: none;
+      margin: 20px auto;
+      width: 3rem;
+      height: 3rem;
+      border: 0.4em solid #ccc;
+      border-top: 0.4em solid #007bff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .plot-wrapper {
+      margin-bottom: 40px;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      background: #ffffff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .plot-title {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="mb-4">Environment Test Data Plots</h2>
+
+    <label for="sheet-select" class="form-label">Select Test Type:</label>
+    <select id="sheet-select" class="form-select mb-4">
+      <option value="Water Test">Water Test</option>
+      <option value="Soil Test">Soil Test</option>
+      <option value="Air Test">Air Test</option>
+    </select>
+
+    <div id="loading-spinner"></div>
+    <div id="plots-container"></div>
+  </div>
+
+  <script>
+    const sheetSelect = document.getElementById("sheet-select");
+    const loadingSpinner = document.getElementById("loading-spinner");
+    const plotsContainer = document.getElementById("plots-container");
+
+    function showLoading(show) {
+      loadingSpinner.style.display = show ? "block" : "none";
+    }
+
+    function clearPlots() {
+      plotsContainer.innerHTML = "";
+    }
+
+    function createPlotDiv(id, titleText) {
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("plot-wrapper");
+
+      const title = document.createElement("div");
+      title.className = "plot-title";
+      title.textContent = `${titleText} vs Date`;
+      wrapper.appendChild(title);
+
+      const plotDiv = document.createElement("div");
+      plotDiv.id = id;
+      plotDiv.style.width = "100%";
+      plotDiv.style.height = "400px";
+
+      wrapper.appendChild(plotDiv);
+      plotsContainer.appendChild(wrapper);
+
+      return plotDiv;
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return isNaN(d) ? dateStr : d.toISOString().split("T")[0];
+    }
+
+    async function fetchAndPlot(sheet) {
+      clearPlots();
+      showLoading(true);
+
+      try {
+        const res = await fetch(`/api/plot/${encodeURIComponent(sheet)}`);
+        const data = await res.json();
+        showLoading(false);
+
+        if (res.status !== 200 || data.error) {
+          plotsContainer.innerHTML = `<p class="text-danger">${data.error || "Failed to fetch plot data."}</p>`;
+          return;
+        }
+
+        if (!data.length) {
+          plotsContainer.innerHTML = `<p class="text-muted">No data available for this selection.</p>`;
+          return;
+        }
+
+        const keys = Object.keys(data[0]).filter(k => k !== "Date");
+
+        keys.forEach((key, i) => {
+          const plotDiv = createPlotDiv(`plot-${i}`, key);
+
+          const trace = {
+            x: data.map(d => formatDate(d.Date)),
+            y: data.map(d => (d[key] !== "" && d[key] != null ? parseFloat(d[key]) : null)),
+            mode: "lines+markers",
+            name: key,
+            connectgaps: true,
+            line: { shape: 'linear' }
+          };
+
+          Plotly.newPlot(plotDiv, [trace], {
+            margin: { t: 10, b: 80, l: 60, r: 30 },
+            xaxis: {
+              title: "Date",
+              type: "date",
+              tickformat: "%Y-%m-%d",
+              tickangle: -45,
+              automargin: true,
+              tickfont: { size: 10 }
+            },
+            yaxis: {
+              title: `${key} Value`,
+              automargin: true
+            },
+            responsive: true
+          });
+        });
+      } catch (err) {
+        showLoading(false);
+        plotsContainer.innerHTML = `<p class="text-danger">Error loading data: ${err.message}</p>`;
+      }
+    }
+
+    sheetSelect.addEventListener("change", () => {
+      fetchAndPlot(sheetSelect.value);
+    });
+
+    window.onload = () => {
+      fetchAndPlot(sheetSelect.value);
+    };
+  </script>
+</body>
+</html>
