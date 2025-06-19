@@ -1,0 +1,20 @@
+# Ignore Python cache and bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore Excel data and backups
+environmental_data.xlsx
+backups/
+*.bak
+*.tmp
+
+# Ignore OS files
+Thumbs.db
+.DS_Store
+
+# Ignore IDE settings
+.vscode/
